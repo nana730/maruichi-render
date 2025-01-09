@@ -22,6 +22,8 @@ Rails.application.routes.draw do
     resources :orders, only: %i[create show index]
     resources :articles, only: %i[index show]
     resources :contacts, only: %i[new create]
+    resources :checkouts, only: [:create]
+    resources :webhooks, only: [:create]
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

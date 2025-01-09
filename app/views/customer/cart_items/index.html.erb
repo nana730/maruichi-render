@@ -23,34 +23,15 @@
     } %>
   </div>
 
-  <!-- 注文情報入力フォーム -->
-  <h2 class="mt-5">配送先情報</h2>
-  <%= form_with model: @order, url: orders_path, scope: :order, local: true do |f| %>
-    <%= render "customer/shared/error_messages", resource: @order %>
-    <div class="mt-4">
-      <%= f.label :name, "お名前", class: "form-label" %>
-      <%= f.text_field :name, class: "form-control", placeholder: "フルネーム(漢字)で入力してください" %>
-
-      <%= f.label :postal_code, "郵便番号", class: "form-label mt-2" %>
-      <%= f.text_field :postal_code, class: "form-control", placeholder: "例: 123-4567" %>
-
-      <%= f.label :prefecture, "都道府県", class: "form-label mt-2" %>
-      <%= f.text_field :prefecture, class: "form-control", placeholder: "例: 東京都" %>
-
-      <%= f.label :address, "住所", class: "form-label mt-2" %>
-      <%= f.text_field :address, class: "form-control", placeholder: "千代田区一番町17-6 一番町ビル8F" %>
-    </div>
-
-    <!-- ボタン -->
-    <div class="d-flex justify-content-center mt-4 mb-3">
-      <%= link_to products_path, class: "btn btn-outline-secondary w-25 py-2 rounded-pill shadow-lg mx-2" do %>
-        <i class="bi bi-arrow-left"></i> 戻る
-      <% end %>
-
-<%= button_tag type: "submit", class: "btn btn-coffee w-25 text-white py-2 rounded-pill shadow-lg mx-2" do %>
-  <i class="bi bi-check-circle"></i> 注文する
-<% end %>
-
-    </div>
+  <div class="d-flex justify-content-center mt-4 mb-3">
+  <!-- 戻るボタン -->
+  <%= link_to products_path, class: "btn btn-outline-secondary px-4 py-2 rounded-pill shadow-lg mx-2" do %>
+    <i class="bi bi-arrow-left"></i> 戻る
   <% end %>
+
+  <!-- 決済ボタン -->
+  <%= button_to checkouts_path, data: { turbo: false }, class: "btn btn-coffee text-white px-4 py-2 rounded-pill shadow-lg mx-2" do %>
+    <i class="bi bi-check-circle"></i> 決済する
+  <% end %>
+</div>
 <% end %>

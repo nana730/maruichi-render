@@ -1,7 +1,7 @@
 class Customer::CartItemsController < ApplicationController
   before_action :authenticate_customer!
-  before_action :set_cart_item, only: %i[destroy update]
-  before_action :set_cart_items_and_total_price, only: %i[index update create]
+  before_action :set_cart_item, only: %i[increase decrease destroy]
+  before_action :set_cart_items_and_total_price, only: %i[index create]
 
   def index
     @cart_items = current_customer.cart_items.includes(:product).order(:created_at)
@@ -44,15 +44,18 @@ class Customer::CartItemsController < ApplicationController
     end
   end
   
-
-  def update
-    if @cart_item.update(cart_item_params)
-      respond_to do |format|
-        format.html { redirect_to cart_items_path, notice: "カートが更新されました" }
-        format.turbo_stream # turbo_streamでJSのレスポンスを使用
-      end
+  def increase
+    @cart_item.increment!(:quantity, 1)
+    redirect_to cart_items_path, notice: 'カート内の商品の数量を増やしました。'
+  end
+  
+  def decrease
+    if @cart_item.quantity > 1
+      @cart_item.decrement!(:quantity, 1)
+      redirect_to cart_items_path, notice: 'カート内の商品の数量を減らしました。'
     else
-      redirect_to cart_items_path, alert: "更新に失敗しました"
+      @cart_item.destroy
+      redirect_to cart_items_path, notice: '商品をカートから削除しました。'
     end
   end
 
@@ -76,7 +79,7 @@ class Customer::CartItemsController < ApplicationController
 
   def set_cart_items_and_total_price
     @cart_items = current_customer.cart_items.includes(:product).order(:created_at)
-    @total_price = @cart_items.sum(&:subtotal)
+    @total_price = @cart_items.sum(&:subtotal) || 0 # 空の場合に0を設定
   end
 
   def cart_item_params

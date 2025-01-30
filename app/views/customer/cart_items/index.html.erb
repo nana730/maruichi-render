@@ -10,28 +10,68 @@
 <% else %>
   <div class="row">
     <% @cart_items.each do |cart_item| %>
-      <div class="col-md-4">
-        <%= render partial: "customer/cart_items/cart_item", locals: { cart_item: cart_item } %>
+      <div class="col-md-4 mb-4">
+        <!-- 商品情報 -->
+        <div class="card">
+        <% if cart_item.product.image.attached? %>
+          <%= image_tag cart_item.product.image, class: "card-img-top", alt: cart_item.product.name, style: "height: 200px; object-fit: cover;" %>
+        <% else %>
+          <%= image_tag "no_image_available.png", class: "card-img-top", alt: "No Image", style: "height: 200px; object-fit: cover;" %>
+        <% end %>
+          <div class="card-body">
+            <h5 class="card-title"><%= cart_item.product.name %></h5>
+            <p class="card-text">価格: <%= number_to_currency(cart_item.product.price, unit: "¥", strip_insignificant_zeros: true) %></p>
+            <p class="card-text">在庫: <%= cart_item.product.stock %></p>
+            <p class="card-text">豆の状態: <%= cart_item.bean_state %></p>
+            <!-- 数量調整 -->
+            <div class="d-flex justify-content-center align-items-center">
+              <%= link_to decrease_cart_item_path(cart_item), data: { "turbo-method": :patch }, class: "btn btn-outline-danger mx-2" do %>
+                <i class="bi bi-dash"></i>
+              <% end %>
+              <span class="mx-3"><%= cart_item.quantity %></span>
+              <% unless cart_item.quantity >= cart_item.product.stock %>
+                <%= link_to increase_cart_item_path(cart_item), data: { "turbo-method": :patch }, class: "btn btn-outline-primary mx-2" do %>
+                  <i class="bi bi-plus"></i>
+                <% end %>
+              <% end %>
+            </div>
+
+            <!-- 小計 -->
+            <div class="text-center text-lg mb-3">
+              <span>小計: <%= number_to_currency(cart_item.subtotal, unit: "¥", strip_insignificant_zeros: true) %></span>
+            </div>
+
+            <!-- 削除ボタン -->
+          <div class="text-center mt-3">
+            <%= link_to cart_item_path(cart_item), data: { "turbo-method": :delete, "turbo_confirm": '商品を削除しますか？' }, class: "btn btn-danger btn-sm" do %>
+              <i class="bi bi-trash"></i> 削除
+            <% end %>
+          </div>
+          </div>
+        </div>
       </div>
     <% end %>
   </div>
 
+  <!-- カート合計 -->
   <div class="col-lg-4">
-    <%= render partial: "customer/cart_items/total_summary", locals: { 
-      total_amount: @total_price + 500, 
-      postage: 500 
-    } %>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">合計金額</h5>
+        <p>小計: <%= number_to_currency(@total_price, unit: "¥", strip_insignificant_zeros: true) %></p>
+        <p>送料: <%= number_to_currency(500, unit: "¥", strip_insignificant_zeros: true) %></p>
+        <p>合計: <%= number_to_currency(@total_price + 500, unit: "¥", strip_insignificant_zeros: true) %></p>
+      </div>
+    </div>
   </div>
 
-  <div class="d-flex justify-content-center mt-4 mb-3">
-  <!-- 戻るボタン -->
-  <%= link_to products_path, class: "btn btn-outline-secondary px-4 py-2 rounded-pill shadow-lg mx-2" do %>
-    <i class="bi bi-arrow-left"></i> 戻る
-  <% end %>
-
-  <!-- 決済ボタン -->
-  <%= button_to checkouts_path, data: { turbo: false }, class: "btn btn-coffee text-white px-4 py-2 rounded-pill shadow-lg mx-2" do %>
-    <i class="bi bi-check-circle"></i> 決済する
-  <% end %>
-</div>
+  <!-- ボタン -->
+  <div class="d-flex justify-content-center mt-4">
+    <%= link_to products_path, class: "btn btn-outline-secondary px-4 py-2 rounded-pill shadow-lg mx-2" do %>
+      <i class="bi bi-arrow-left"></i> 戻る
+    <% end %>
+    <%= button_to checkouts_path, data: { turbo: false }, class: "btn btn-coffee text-white px-4 py-2 rounded-pill shadow-lg mx-2" do %>
+      <i class="bi bi-check-circle"></i> 決済する
+    <% end %>
+  </div>
 <% end %>

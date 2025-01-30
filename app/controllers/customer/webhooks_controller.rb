@@ -6,6 +6,7 @@ class Customer::WebhooksController < ApplicationController
     sig_header = request.env['HTTP_STRIPE_SIGNATURE']
     endpoint_secret = Rails.application.credentials.dig(:stripe, :endpoint_secret)
     event = nil
+    Rails.logger.info("Webhook received: #{params.inspect}")
 
     begin
       event = Stripe::Webhook.construct_event(
@@ -23,9 +24,52 @@ class Customer::WebhooksController < ApplicationController
       return
     end
 
-    case event.type
-    when 'checkout.session.completed'
-      # ... execute a process
+  case event.type
+  when 'checkout.session.completed'
+    session = event.data.object # sessionの取得
+    customer = Customer.find(session.client_reference_id)
+    return unless customer # 顧客が存在するかどうか確認
+      
+    # トランザクション処理開始
+    ApplicationRecord.transaction do
+      order = create_order(session) # sessionを元にordersテーブルにデータを挿入
+      session_with_expand = Stripe::Checkout::Session.retrieve({ id: session.id, expand: ['line_items'] })
+      session_with_expand.line_items.data.each do |line_item|
+        create_order_items(order, line_item) # 取り出したline_itemをorder_itemsテーブルに登録
+      end
     end
+    # トランザクション処理終了
+    customer.cart_items.destroy_all # 顧客のカート内商品を全て削除
+    redirect_to session.success_url
+  end
+end
+
+private
+
+ def create_order(session)
+   Order.create!({
+                   customer_id: session.client_reference_id,
+                   name: session.shipping_details.name,
+                   postal_code: session.shipping_details.address.postal_code,
+                   prefecture: session.shipping_details.address.state,
+                   address1: session.shipping_details.address.line1,
+                   address2: session.shipping_details.address.line2,
+                   postage: session.shipping_options[0].shipping_amount,
+                   total_amount: session.amount_total,
+                   status: 'confirm_payment'
+                 })
+ end
+
+  def create_order_items(order, line_item)
+    product = Stripe::Product.retrieve(line_item.price.product)
+    purchased_product = Product.find(product.metadata.product_id)
+    raise ActiveRecord::RecordNotFound if purchased_product.nil?
+
+    order_detail = order.order_items.create!({
+                                                product_id: purchased_product.id,
+                                                price: line_item.price.unit_amount,
+                                                quantity: line_item.quantity
+                                              })
+    purchased_product.update!(stock: (purchased_product.stock - order_items.quantity)) # 購入された商品の在庫数の更新
   end
 end

@@ -5,8 +5,8 @@
 
 ## 開発手順
 ```
-$ git clone git@github.com:nana730/coffee_shop.git
-$ cd coffeeshop
+$ git clone git@github.com:nana730/maruichi.git
+$ cd maruichi
 $ bundle install
 $ rails db:create && rails db:migrate
 $ rails s

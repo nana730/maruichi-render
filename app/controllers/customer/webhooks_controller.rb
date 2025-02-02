@@ -4,9 +4,8 @@ class Customer::WebhooksController < ApplicationController
   def create
     payload = request.body.read
     sig_header = request.env['HTTP_STRIPE_SIGNATURE']
-    endpoint_secret = Rails.application.credentials.dig(:stripe, :endpoint_secret)
+    endpoint_secret = ENV['STRIPE_ENDPOINT_SECRET']
     event = nil
-    Rails.logger.info("Webhook received: #{params.inspect}")
 
     begin
       event = Stripe::Webhook.construct_event(
@@ -24,24 +23,24 @@ class Customer::WebhooksController < ApplicationController
       return
     end
 
-  case event.type
-  when 'checkout.session.completed'
-    session = event.data.object # sessionの取得
-    customer = Customer.find(session.client_reference_id)
-    return unless customer # 顧客が存在するかどうか確認
+    case event.type
+    when 'checkout.session.completed'
+      session = event.data.object # sessionの取得
+      customer = Customer.find(session.client_reference_id)
+      return unless customer # 顧客が存在するかどうか確認
       
-    # トランザクション処理開始
-    ApplicationRecord.transaction do
-      order = create_order(session) # sessionを元にordersテーブルにデータを挿入
-      session_with_expand = Stripe::Checkout::Session.retrieve({ id: session.id, expand: ['line_items'] })
-      session_with_expand.line_items.data.each do |line_item|
-        create_order_items(order, line_item) # 取り出したline_itemをorder_itemsテーブルに登録
+      # トランザクション処理開始
+      ApplicationRecord.transaction do
+        order = create_order(session) # sessionを元にordersテーブルにデータを挿入
+        session_with_expand = Stripe::Checkout::Session.retrieve({ id: session.id, expand: ['line_items'] })
+        session_with_expand.line_items.data.each do |line_item|
+          create_order_details(order, line_item) # 取り出したline_itemをorder_detailsテーブルに登録
+        end
       end
+      # トランザクション処理終了
+      customer.cart_items.destroy_all # 顧客のカート内商品を全て削除
+      redirect_to session.success_url
     end
-    # トランザクション処理終了
-    customer.cart_items.destroy_all # 顧客のカート内商品を全て削除
-    redirect_to session.success_url
-  end
 end
 
 private
@@ -60,16 +59,29 @@ private
                  })
  end
 
-  def create_order_items(order, line_item)
-    product = Stripe::Product.retrieve(line_item.price.product)
-    purchased_product = Product.find(product.metadata.product_id)
-    raise ActiveRecord::RecordNotFound if purchased_product.nil?
+ def create_order_details(order, line_item)
+  # StripeのProductオブジェクトを取得
+  product = Stripe::Product.retrieve(line_item.price.product)
 
-    order_detail = order.order_items.create!({
-                                                product_id: purchased_product.id,
-                                                price: line_item.price.unit_amount,
-                                                quantity: line_item.quantity
-                                              })
-    purchased_product.update!(stock: (purchased_product.stock - order_items.quantity)) # 購入された商品の在庫数の更新
-  end
+  # RailsのProductモデルから該当する商品を取得
+  purchased_product = Product.find_by(id: product.metadata.product_id)
+  raise ActiveRecord::RecordNotFound, "Product not found for ID #{product.metadata.product_id}" if purchased_product.nil?
+
+  # bean_stateを取得（metadataが存在する場合のみ）
+  bean_state = product.metadata['bean_state']
+
+# bean_stateがnilでない場合のみ変換を適用
+  bean_state = CartItem.bean_states[bean_state] if bean_state.present?
+  
+  # 注文詳細を作成
+  order_detail = order.order_items.create!(
+    product_id: purchased_product.id,
+    price: line_item.price.unit_amount,
+    quantity: line_item.quantity,
+    bean_state: bean_state # 修正: product.metadataから取得
+  )
+
+  # 在庫数を更新
+  purchased_product.update!(stock: purchased_product.stock - order_detail.quantity)
+end
 end

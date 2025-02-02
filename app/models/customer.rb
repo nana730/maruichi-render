@@ -18,7 +18,8 @@ class Customer < ApplicationRecord
           product_data: {
             name: cart_item.product.name,
             metadata: {
-              product_id: cart_item.product_id
+              product_id: cart_item.product_id,
+              bean_state: cart_item.bean_state
             }
           }
         }

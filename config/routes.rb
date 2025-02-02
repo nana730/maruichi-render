@@ -24,11 +24,15 @@ Rails.application.routes.draw do
         patch 'decrease'
       end
     end
-    resources :orders, only: %i[create show index]
     resources :articles, only: %i[index show]
     resources :contacts, only: %i[new create]
     resources :checkouts, only: [:create]
     resources :webhooks, only: [:create]
+    resources :orders, only: %i[index show] do
+      collection do
+        get 'success'
+      end
+    end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

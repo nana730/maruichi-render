@@ -14,7 +14,7 @@ class Order < ApplicationRecord
   validates :name, presence: true
   validates :postal_code, presence: true
   validates :prefecture, presence: true
-  validates :address, presence: true
+  validates :address1, presence: true
   validates :postage, presence: true
   validates :total_amount, presence: true
   validates :status, presence: true

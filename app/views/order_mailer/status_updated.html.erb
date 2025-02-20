@@ -1,4 +1,5 @@
-<p><%= @customer.name %> 様,</p>
+<p><%= @customer.present? ? @customer.name : '顧客様' %> 様,</p>
+
 
 <p>ご注文ありがとうございます</p>
 <p>以下の注文を承りました。</p>

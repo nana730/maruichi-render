@@ -39,6 +39,8 @@ class Customer::WebhooksController < ApplicationController
       end
       # トランザクション処理終了
       customer.cart_items.destroy_all # 顧客のカート内商品を全て削除
+      customer = Customer.find_by(email: session.customer_details.email)
+      order = customer.orders.last if customer # 顧客の最後の注文を取得
       redirect_to session.success_url
     end
 end
@@ -72,7 +74,7 @@ private
 
 # bean_stateがnilでない場合のみ変換を適用
   bean_state = CartItem.bean_states[bean_state] if bean_state.present?
-  
+
   # 注文詳細を作成
   order_detail = order.order_items.create!(
     product_id: purchased_product.id,

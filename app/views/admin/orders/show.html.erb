@@ -103,14 +103,5 @@
     <%= link_to admin_root_path, class: "btn btn-outline-secondary w-45 py-2 rounded-pill shadow-lg" do %>
       <i class="bi bi-arrow-left"></i> 戻る
     <% end %>
-  
-    <% if @order.status == 'オーナー確認待ち' %>
-      <%= form_with(model: @order, url: admin_order_path(@order), method: :put, local: true) do |f| %>
-        <%= f.hidden_field :status, value: "オーナー確認済み" %>
-        <%= f.submit "オーナー確認済みにする", class: "btn bg-info text-white" %>
-      <% end %>
-    <% else %>
-      <button class="btn btn-success text-white" disabled>オーナー確認済み</button>
-    <% end %>
   </div>
 </div>

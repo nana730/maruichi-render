@@ -2,9 +2,15 @@ module ApplicationHelper
   def status_badge(status)
     # ステータスに応じてクラスを切り替え
     badge_class = case status
-                  when "オーナー確認待ち"
+                  when "waiting_payment"
                     "bg-info text-white"
-                  when "オーナー確認済み"
+                  when "confirm_payment"
+                    "bg-success text-white"
+                  when "shipped"
+                    "bg-success text-white"
+                  when "out_of_delivery"
+                    "bg-success text-white"
+                  when "delivered"
                     "bg-success text-white"
                   else
                     "bg-secondary text-white" # デフォルトのスタイル

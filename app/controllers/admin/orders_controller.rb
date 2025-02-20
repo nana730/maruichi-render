@@ -7,10 +7,6 @@ class Admin::OrdersController < ApplicationController
   end
 
   def update
-    if @order.status == 'オーナー確認済み'
-      redirect_to admin_order_path(@order), alert: "この注文はすでに確認済みです。" and return
-    end
-  
     # トランザクション開始
     begin
       ActiveRecord::Base.transaction do
@@ -27,7 +23,7 @@ class Admin::OrdersController < ApplicationController
           raise 'ステータス更新失敗'
         end
       end
-  
+
       # メール送信が成功した場合
       redirect_to admin_order_path(@order), notice: 'カスタマーにメールを送りました。オーナー確認済みに変更しました。'
     rescue StandardError => e

@@ -13,17 +13,17 @@
       <h5 class="mb-0">受注状況</h5>
     </div>
     <div class="card-body">
-      <%= form_with(url: admin_root_path, method: :get, local: true) do |f| %>
-        <div class="d-flex justify-content-center align-items-center">
-          <%= f.select :status, options_for_select(
-            [["すべて", nil], ["オーナー確認待ち", "オーナー確認待ち"], ["オーナー確認済み", "オーナー確認済み"]],
-            selected: @selected
-          ), { class: "form-select bg-light border-0 text-dark p-3" } %>
-          <%= f.submit "検索", class: "btn btn-custom ms-3 p-3", name: nil %>
-        </div>
-      <% end %>
-    </div>
+    <%= form_with(url: admin_root_path, method: :get, local: true) do |f| %>
+      <div class="d-flex justify-content-center align-items-center">
+        <%= f.select :status, options_for_select(
+          [["すべて", nil]] + Order.statuses.keys.map { |key| [Order.human_attribute_name("status.#{key}"), key] },
+          selected: @selected
+        ), {}, class: "form-select bg-light border-0 text-dark p-3" %>
+        <%= f.submit "検索", class: "btn btn-custom ms-3 p-3", name: nil %>
+      </div>
+    <% end %>
   </div>
+  
 
   <!-- 検索結果表示部分 -->
   <div class="row">

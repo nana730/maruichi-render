@@ -41,6 +41,8 @@ class Customer::WebhooksController < ApplicationController
       customer.cart_items.destroy_all # 顧客のカート内商品を全て削除
       customer = Customer.find_by(email: session.customer_details.email)
       order = customer.orders.last if customer # 顧客の最後の注文を取得
+# メール送信（非同期）
+      OrderMailer.status_updated(order).deliver_now if order
       redirect_to session.success_url
     end
 end

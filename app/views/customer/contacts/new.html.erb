@@ -21,7 +21,7 @@
         </div>
         <div class="mb-3">
           <%= f.label :email, "メールアドレス", class: "form-label" %>
-          <%= f.email_field :email, name: "contact[email]", class: "form-control", value: params.dig(:contact, :email), placeholder: "example@example.com" %>
+          <%= f.email_field :email, name: "contact[email]", class: "form-control", value: params.dig(:contact, :email), placeholder: "例:example@example.com" %>
         </div>
         <div class="mb-3">
           <%= f.label :subject, "件名", class: "form-label" %>
